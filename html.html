@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Approve or Reject System</title>
+    <style>
+        /* Add your CSS styling here */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .approve-btn, .reject-btn {
+            padding: 5px 10px;
+            border: none;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+
+        .approve-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .reject-btn {
+            background-color: #f44336;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Appointment List</h2>
+<table id="appointmentTable">
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Appointment Date</th>
+            <th>Time</th>
+            <th>Description</th>
+            <th>Approve</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Data will be inserted here by JavaScript -->
+    </tbody>
+</table>
+
+<script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbwvYPrIm1zGmzkP16UljxkM6gtUjuH7Rk9wk-ojTb7H9WhiY5nJ9PMBURSmFAiBbMW7/exec';
+    const spreadsheetURL = 'https://docs.google.com/spreadsheets/d/1hO7NPBr8WGoCYKbh_mO5_Bt6ivWD22R6wGYgKoXH-d8/edit?gid=0#gid=0';
+
+    // Fetch data from the AppScript link
+    fetch(scriptURL)
+        .then(response => response.json())
+        .then(data => loadAppointments(data))
+        .catch(error => console.error('Error:', error));
+
+    function loadAppointments(data) {
+        const tableBody = document.getElementById('appointmentTable').getElementsByTagName('tbody')[0];
+        data.forEach(appointment => {
+            const row = tableBody.insertRow();
+            appointment.forEach((cellData, index) => {
+                const cell = row.insertCell();
+                cell.innerHTML = cellData;
+            });
+
+            // Add Approve and Reject buttons
+            const approveCell = row.insertCell();
+            approveCell.innerHTML = `
+                <button class="approve-btn" onclick="handleApproval('${appointment.join("','")}', true)">Approve</button>
+                <button class="reject-btn" onclick="handleApproval('${appointment.join("','")}', false)">Reject</button>
+            `;
+        });
+    }
+
+    function handleApproval(appointmentData, isApproved) {
+        const data = appointmentData.split("','").concat(isApproved ? 'Approved' : 'Rejected');
+        
+        const postData = {
+            "values": [data]
+        };
+
+        fetch(spreadsheetURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(postData),
+        })
+        .then(response => response.json())
+        .then(result => alert('Data submitted successfully!'))
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+
+</body>
+</html>
